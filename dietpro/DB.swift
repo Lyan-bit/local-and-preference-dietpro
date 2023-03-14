@@ -5,15 +5,15 @@ import SQLite3
 
 class DB {
   let dbPointer : OpaquePointer?
-  static let dbNAME = "dietproApp.db"
-  static let dbVERSION = 1
+  static let dbName = "dietproApp.db"
+  static let dbVersion = 1
 
-  static let mealTABLENAME = "Meal"
+  static let mealTableName = "Meal"
   static let mealID = 0
-  static let mealCOLS : [String] = ["TableId", "mealId", "mealName", "calories", "dates", "images", "analysis", "userName"]
-  static let mealNUMBERCOLS = 0
+  static let mealCols : [String] = ["TableId", "mealId", "mealName", "calories", "dates", "images", "analysis", "userName"]
+  static let mealNumberCols = 0
 
-  static let mealCREATESCHEMA =
+  static let mealCreateSchema =
     "create table Meal (TableId integer primary key autoincrement" + 
         ", mealId VARCHAR(50) not null"  +
         ", mealName VARCHAR(50) not null"  +
@@ -30,7 +30,7 @@ class DB {
   func createDatabase() throws
   { do 
     { 
-    try createTable(table: DB.mealCREATESCHEMA)
+    try createTable(table: DB.mealCreateSchema)
       print("Created database")
     }
     catch { print("Errors: " + errorMessage) }
@@ -122,59 +122,14 @@ class DB {
   }
 
   func listMeal() -> [MealVO]
-  { var res : [MealVO] = [MealVO]()
-    let statement = "SELECT * FROM Meal "
-    let queryStatement = try? prepareStatement(sql: statement)
-    if queryStatement == nil { 
-    	return res
-    }
-    
-    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-    { //let id = sqlite3_column_int(queryStatement, 0)
-      let mealvo = MealVO()
-      
-    guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1) 
-    else { return res } 
-    let mealId = String(cString: queryResultMealCOLMEALID) 
-    mealvo.setMealId(x: mealId) 
-
-    guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2) 
-    else { return res } 
-    let mealName = String(cString: queryResultMealCOLMEALNAME) 
-    mealvo.setMealName(x: mealName) 
-
-    let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3) 
-    let calories = Double(queryResultMealCOLCALORIES) 
-    mealvo.setCalories(x: calories) 
-
-    guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4) 
-    else { return res } 
-    let dates = String(cString: queryResultMealCOLDATES) 
-    mealvo.setDates(x: dates) 
-
-    guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5) 
-    else { return res } 
-    let images = String(cString: queryResultMealCOLIMAGES) 
-    mealvo.setImages(x: images) 
-
-    guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6) 
-    else { return res } 
-    let analysis = String(cString: queryResultMealCOLANALYSIS) 
-    mealvo.setAnalysis(x: analysis) 
-
-    guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7) 
-    else { return res } 
-    let userName = String(cString: queryResultMealCOLUSERNAME) 
-    mealvo.setUserName(x: userName) 
-
-      res.append(mealvo)
-    }
-    sqlite3_finalize(queryStatement)
-    return res
+  { 
+  	let statement = "SELECT * FROM Meal "
+  	return setDataMeal(statement: statement)
   }
 
   func createMeal(mealvo : MealVO) throws
   { let insertSQL : String = "INSERT INTO Meal (mealId, mealName, calories, dates, images, analysis, userName) VALUES (" 
+
      + "'" + mealvo.getMealId() + "'" + "," 
      + "'" + mealvo.getMealName() + "'" + "," 
      + String(mealvo.getCalories()) + "," 
@@ -191,304 +146,45 @@ class DB {
   }
 
   func searchByMealmealId(val : String) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE mealId = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE mealId = " + "'" + val + "'" 
+	  	return setDataMeal(statement: statement)
 	  }
 	  
   func searchByMealmealName(val : String) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE mealName = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE mealName = " + "'" + val + "'" 
+	  	return setDataMeal(statement: statement)
 	  }
 	  
   func searchByMealcalories(val : Double) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE calories = " + String( val )
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE calories = " + String( val )
+	  	return setDataMeal(statement: statement)
 	  }
 	  
   func searchByMealdates(val : String) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE dates = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE dates = " + "'" + val + "'" 
+	  	return setDataMeal(statement: statement)
 	  }
 	  
   func searchByMealimages(val : String) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE images = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE images = " + "'" + val + "'" 
+	  	return setDataMeal(statement: statement)
 	  }
 	  
   func searchByMealanalysis(val : String) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE analysis = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE analysis = " + "'" + val + "'" 
+	  	return setDataMeal(statement: statement)
 	  }
 	  
   func searchByMealuserName(val : String) -> [MealVO]
-	  { var res : [MealVO] = [MealVO]()
-	    let statement : String = "SELECT * FROM Meal WHERE userName = " + "'" + val + "'" 
-	    let queryStatement = try? prepareStatement(sql: statement)
-	    
-	    while (sqlite3_step(queryStatement) == SQLITE_ROW)
-	    { //let id = sqlite3_column_int(queryStatement, 0)
-	      let mealvo = MealVO()
-	      
-	      guard let queryResultMealCOLMEALID = sqlite3_column_text(queryStatement, 1)
-		      else { return res }	      
-		      let mealId = String(cString: queryResultMealCOLMEALID)
-		      mealvo.setMealId(x: mealId)
-	      guard let queryResultMealCOLMEALNAME = sqlite3_column_text(queryStatement, 2)
-		      else { return res }	      
-		      let mealName = String(cString: queryResultMealCOLMEALNAME)
-		      mealvo.setMealName(x: mealName)
-	      let queryResultMealCOLCALORIES = sqlite3_column_double(queryStatement, 3)
-		      let calories = Double(queryResultMealCOLCALORIES)
-		      mealvo.setCalories(x: calories)
-	      guard let queryResultMealCOLDATES = sqlite3_column_text(queryStatement, 4)
-		      else { return res }	      
-		      let dates = String(cString: queryResultMealCOLDATES)
-		      mealvo.setDates(x: dates)
-	      guard let queryResultMealCOLIMAGES = sqlite3_column_text(queryStatement, 5)
-		      else { return res }	      
-		      let images = String(cString: queryResultMealCOLIMAGES)
-		      mealvo.setImages(x: images)
-	      guard let queryResultMealCOLANALYSIS = sqlite3_column_text(queryStatement, 6)
-		      else { return res }	      
-		      let analysis = String(cString: queryResultMealCOLANALYSIS)
-		      mealvo.setAnalysis(x: analysis)
-	      guard let queryResultMealCOLUSERNAME = sqlite3_column_text(queryStatement, 7)
-		      else { return res }	      
-		      let userName = String(cString: queryResultMealCOLUSERNAME)
-		      mealvo.setUserName(x: userName)
-
-	      res.append(mealvo)
-	    }
-	    sqlite3_finalize(queryStatement)
-	    return res
+	  { 
+	  	let statement : String = "SELECT * FROM Meal WHERE userName = " + "'" + val + "'" 
+	  	return setDataMeal(statement: statement)
 	  }
 	  
 
@@ -496,15 +192,15 @@ class DB {
   { var updateStatement: OpaquePointer?
     let statement : String = "UPDATE Meal SET " 
     + " mealName = '"+mealvo.getMealName() + "'" 
- + "," 
+    + "," 
     + " calories = " + String(mealvo.getCalories()) 
- + "," 
+    + "," 
     + " dates = '"+mealvo.getDates() + "'" 
- + "," 
+    + "," 
     + " images = '"+mealvo.getImages() + "'" 
- + "," 
+    + "," 
     + " analysis = '"+mealvo.getAnalysis() + "'" 
- + "," 
+    + "," 
     + " userName = '"+mealvo.getUserName() + "'" 
     + " WHERE mealId = '" + mealvo.getMealId() + "'" 
 
@@ -542,5 +238,47 @@ class DB {
   deinit
   { sqlite3_close(self.dbPointer) }
 
+  func setDataMeal(statement: String) -> [MealVO] {
+          var res : [MealVO] = [MealVO]()
+          let queryStatement = try? prepareStatement(sql: statement)
+          
+          while (sqlite3_step(queryStatement) == SQLITE_ROW)
+          { 
+            let mealvo = MealVO()
+            
+	      guard let queryResultMealColMealId = sqlite3_column_text(queryStatement, 1)
+			      else { return res }	      
+			      let mealId = String(cString: queryResultMealColMealId)
+			      mealvo.setMealId(x: mealId)
+	      guard let queryResultMealColMealName = sqlite3_column_text(queryStatement, 2)
+			      else { return res }	      
+			      let mealName = String(cString: queryResultMealColMealName)
+			      mealvo.setMealName(x: mealName)
+	      let queryResultMealColCalories = sqlite3_column_double(queryStatement, 3)
+			      let calories = Double(queryResultMealColCalories)
+			      mealvo.setCalories(x: calories)
+	      guard let queryResultMealColDates = sqlite3_column_text(queryStatement, 4)
+			      else { return res }	      
+			      let dates = String(cString: queryResultMealColDates)
+			      mealvo.setDates(x: dates)
+	      guard let queryResultMealColImages = sqlite3_column_text(queryStatement, 5)
+			      else { return res }	      
+			      let images = String(cString: queryResultMealColImages)
+			      mealvo.setImages(x: images)
+	      guard let queryResultMealColAnalysis = sqlite3_column_text(queryStatement, 6)
+			      else { return res }	      
+			      let analysis = String(cString: queryResultMealColAnalysis)
+			      mealvo.setAnalysis(x: analysis)
+	      guard let queryResultMealColUserName = sqlite3_column_text(queryStatement, 7)
+			      else { return res }	      
+			      let userName = String(cString: queryResultMealColUserName)
+			      mealvo.setUserName(x: userName)
+  
+            res.append(mealvo)
+          }
+          sqlite3_finalize(queryStatement)
+          return res
+      }
+      
 }
 
